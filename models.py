@@ -1,5 +1,6 @@
 from datetime import date
 from typing import Dict, List, Literal, Optional, Union
+from enum import Enum
 from uuid import UUID
 
 from pydantic import BaseModel, Field, HttpUrl
