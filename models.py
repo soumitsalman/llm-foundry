@@ -92,7 +92,7 @@ class NewsSummaryBase(BaseModel):
     cross_domain_significance: List[str] = Field(
         default_factory=list,
         description=(
-            "Explicitly mentioned impact/implication on related domains. Format=list of key:value pairs;key=domain,snake_case;value=1-sentence implication. "
+            "Explicitly mentioned impact/implication on related domains. Format=key-value pairs;key=domain,snake_case;value=1-sentence implication. "
             "Examples:\n"
             "ai: New model could enable more sophisticated cyber attacks\n"
             "cybersecurity: Increased risk of data breaches due to new vulnerabilities\n"
@@ -107,8 +107,8 @@ class NewsSummaryBase(BaseModel):
     macro_context: Optional[str] = Field(
         None,
         description=(
-            "Explicitly mentioned primary geopolitical, trade, economic or macro driver. Avoid full sentence. Format=snake_case. "
-            "Examples: us_iran_conflict,us_china_tensions,red_sea_disruption,tariff_volatility,rare_earth_controls,arctic_shipping_rivalry,lithium_supply_ban,africa_mineral_conflict,cyber_arms_race_escalation."
+            "Primary geopolitical, trade, economic or macro driver. Format=snake_case. "
+            "Examples: us_iran_conflict, us_china_tensions, red_sea_disruption, tariff_volatility, rare_earth_controls, arctic_shipping_rivalry, lithium_supply_ban, africa_mineral_conflict, cyber_arms_race_escalation."
         ),
     )
     tags: List[str] = Field(
@@ -122,7 +122,7 @@ class NewsSummaryBase(BaseModel):
     future_outlook: Optional[str] = Field(None, description="Explicitly mentioned future outlook/trajectory. 1-complete sentence.")
     
     headline: str = Field(description="1-sentence capturing central thesis of the content. Include=core subject, driver, anchor, risk/opportunity, time horizon")
-    tldr: str = Field(description="1-paragraph capturing central thesis of the content. Include=context, drivers, stats, impacts, affected groups, risks, opportunities, outlooks")
+    tldr: str = Field(description="A linkedin post capturing central thesis of the content. Include=context, drivers, stats, impacts, affected groups, risks, opportunities, outlooks")
 
     @classmethod
     def schema(cls):
