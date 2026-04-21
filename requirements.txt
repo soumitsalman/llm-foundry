@@ -1,14 +1,7 @@
 transformers
-unsloth
-optimum[intel] 
-optimum[onnxruntime]
-nncf
-openvino 
-onnxruntime
-onnx
 sentence-transformers
 gliner
-tensorboard
-evaluate
-rouge_score
 vllm
+python-dotenv
+icecream
+retry

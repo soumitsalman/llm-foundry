@@ -1,5 +1,7 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from vllm import LLM
+from transformers import AutoTokenizer
 from models import *
+from utils import *
 
 MODEL_NAME = "unsloth/Qwen3-0.6B-bnb-4bit"
 DIGESTOR_SYS = f"""RESPONSE FORMAT:\n```json\n{NewsSummaryBase.model_json_schema()}```\n"""
