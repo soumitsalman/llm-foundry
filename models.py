@@ -69,23 +69,24 @@ class ImpactLevel(str, Enum):
 # Base class — updated version
 # ────────────────────────────────────────────────
 class NewsSummaryBase(BaseModel):
-    """Base structure shared by all domain-specific news summaries"""
-
-    key_facts: List[str] = Field(description="3–8 complete sentences conveying the most important who/what/when/where/how details and events.")
-    companies: List[str] = Field(default_factory=list, description="Names of companies/organizations explicitly mentioned. Format=snake_case.")
+    key_facts: List[str] = Field(description="3–8 key events and who/what/when/where/how details central to the thesis of the content. Format=complete sentence.")
+    companies: List[str] = Field(default_factory=list, description="Companies/organizations explicitly mentioned. Format=snake_case.")
+    stock_tickers: List[str] = Field(default_factory=list, description="Stock tickers of companies/organizations explicitly mentioned. Format=UPPERCASE.")
+    regions: List[str] = Field(default_factory=list, description="Geographic regions/locations explicitly mentioned. Format=snake_case.")
+    people: List[str] = Field(default_factory=list, description="Key people explicitly mentioned (ex: CEOs, political leaders). Format=snake_case.")
     event_type: Optional[str] = Field(
         None,
         description=(
             "Primary event_type descripted in the content. Avoid full sentence. Format=snake_case. "
             "Examples:\n"
-            "\t- AI: 'model_release', 'agent_launch', 'enterprise_adoption_case', 'safety_regulation_update', 'multimodal_breakthrough'\n"
-            "\t- Cyber: 'ransomware_attack', 'zero_day_disclosure', 'supply_chain_breach', 'ai_enhanced_exploit', 'state_sponsored_campaign'\n"
-            "\t- Hardware/HPC: 'chip_launch', 'platform_announcement', 'supply_chain_disruption', 'sovereign_funding_round', 'foundry_partnership'\n"
-            "\t- Robotics/AV/Drones: 'humanoid_demo', 'warehouse_deployment', 'av_funding_round', 'drone_swarm_test', 'regulation_change'\n"
-            "\t- Startup/Corp: 'series_a', 'acquisition_announced', 'merger_completed', 'strategic_partnership', 'ipo_filing'\n"
-            "\t- Financial/Markets: 'earnings_beat', 'stock_reaction', 'analyst_upgrade', 'sector_rotation', 'sec_filing_update'\n"
-            "\t- Logistics/Aviation: 'route_disruption', 'freight_rate_spike', 'aircraft_order', 'supply_chain_bottleneck', 'cyber_incident_on_cargo'\n"
-            "\t- Macro/Economy: 'oil_price_shock', 'gdp_forecast_revision', 'inflation_spike', 'rate_cut_signal', 'commodity_demand_shift'\n"
+            "ai: model_release, agent_launch, enterprise_adoption_case, safety_regulation_update, multimodal_breakthrough\n"
+            "cybersecurity: ransomware_attack, zero_day_disclosure, supply_chain_breach, ai_enhanced_exploit, state_sponsored_campaign\n"
+            "hardware/hpc: chip_launch, platform_announcement, supply_chain_disruption, sovereign_funding_round, foundry_partnership\n"
+            "robotics/drones: humanoid_demo, warehouse_deployment, av_funding_round, drone_swarm_test, regulation_change\n"
+            "startups: series_a, acquisition_announced, merger_completed, strategic_partnership, ipo_filing\n"
+            "stock_market: earnings_beat, stock_reaction, analyst_upgrade, sector_rotation, sec_filing_update\n"
+            "aviation: route_disruption, freight_rate_spike, aircraft_order, supply_chain_bottleneck, cyber_incident_on_cargo\n"
+            "global_economy: oil_price_shock, gdp_forecast_revision, inflation_spike, rate_cut_signal, commodity_demand_shift\n"
         ),
     )
     cross_domain_significance: List[str] = Field(
@@ -93,14 +94,14 @@ class NewsSummaryBase(BaseModel):
         description=(
             "Explicitly mentioned impact/implication on related domains. Format=list of key:value pairs;key=domain,snake_case;value=1-sentence implication. "
             "Examples:\n"
-            "\t- ai: New model could enable more sophisticated cyber attacks\n"
-            "\t- cybersecurity: Increased risk of data breaches due to new vulnerabilities\n"
-            "\t- logistics: Disruption in key shipping routes could delay hardware deliveries\n"
-            "\t- aviation: Flight delays and cancellations due to air traffic control issues\n"
-            "\t- hardware: Supply chain disruptions affecting chip production\n"
-            "\t- macro: Economic slowdown impacting multiple sectors\n"
-            "\t- markets: Stock market volatility in response to geopolitical events\n"
-            "\t- startups: Emerging companies facing funding challenges\n"
+            "ai: New model could enable more sophisticated cyber attacks\n"
+            "cybersecurity: Increased risk of data breaches due to new vulnerabilities\n"
+            "logistics: Disruption in key shipping routes could delay hardware deliveries\n"
+            "aviation: Flight delays and cancellations due to air traffic control issues\n"
+            "hardware: Supply chain disruptions affecting chip production\n"
+            "global_economy: Economic slowdown impacting multiple sectors\n"
+            "stock_market: Stock market volatility in response to geopolitical events\n"
+            "startups: Emerging companies facing funding challenges\n"
         ),
     )
     macro_context: Optional[str] = Field(
@@ -116,7 +117,7 @@ class NewsSummaryBase(BaseModel):
     )
     impact_level: Optional[str] = Field(
         None,
-        description="Assessed severity / importance of the events to the primary domain and broader ecosystem. Allowed: null, low, medium, high, critial, transformative",
+        description="Explicitly mentioned severity/impact of the events on primary domains and related ecosystem. Allowed: null, low, medium, high, critial, transformative",
     )
     future_outlook: Optional[str] = Field(None, description="Explicitly mentioned future outlook/trajectory. 1-complete sentence.")
     
@@ -132,7 +133,6 @@ class NewsSummaryBase(BaseModel):
 
     def __str__(self):
         return self.model_dump_json()
-
 
 # ────────────────────────────────────────────────
 # Domain-specific models (inherit from base)
