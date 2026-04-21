@@ -70,10 +70,10 @@ class ImpactLevel(str, Enum):
 # ────────────────────────────────────────────────
 class NewsSummaryBase(BaseModel):
     key_facts: List[str] = Field(description="3–8 key events and who/what/when/where/how details central to the thesis of the content. Format=complete sentence.")
-    companies: List[str] = Field(default_factory=list, description="Companies/organizations explicitly mentioned. Format=snake_case.")
+    companies: List[str] = Field(default_factory=list, description="Companies/organizations explicitly mentioned. Avoid=generic,aggregates.")
     stock_tickers: List[str] = Field(default_factory=list, description="Stock tickers of companies/organizations explicitly mentioned. Format=UPPERCASE.")
-    regions: List[str] = Field(default_factory=list, description="Geographic regions/locations explicitly mentioned. Format=snake_case.")
-    people: List[str] = Field(default_factory=list, description="Key people explicitly mentioned (ex: CEOs, political leaders). Format=snake_case.")
+    regions: List[str] = Field(default_factory=list, description="Geographic regions/locations explicitly mentioned. Avoid=generic,aggregates.")
+    people: List[str] = Field(default_factory=list, description="Key people explicitly mentioned (ex: CEOs, political leaders). Avoid=generic,aggregates.")
     event_type: Optional[str] = Field(
         None,
         description=(
