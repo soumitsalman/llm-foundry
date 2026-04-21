@@ -4,12 +4,12 @@ from icecream import ic
 import json, yaml
 
 SYS_MSG = f"""
-EXTRACT {','.join(NewsSummaryBase.model_fields.keys())} FROM INPUT INTO raw_response
-{NewsSummaryBase.schema()}
-EXCLUDE field FROM raw_response WHERE value IS NULL OR value IS EMPTY INTO response
+EXTRACT {','.join(NewsSummaryBase.model_fields.keys())} FROM INPUT HAVING value NOT IN (NULL, '', [])
 RESPONSE FORMAT: JSON
+FIELDS:
+{NewsSummaryBase.schema()}
 """
-INST_MSG = f"INPUT:\n{input}"
+INST_MSG = f"EXTRACT * FROM INPUT:\n{input}"
 
 create_msg = lambda text: [
     { "role": "system", "content": SYS_MSG },
@@ -22,14 +22,12 @@ def load_inputs():
 from vllm import LLM, SamplingParams
 from transformers import AutoTokenizer
 
-def main(model_name):
-
-    
+def main(model_name):    
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    create_text = lambda messages: tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, enable_thinking=False)
+    create_text = lambda messages: tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     texts = list(map(create_text, load_inputs()))
     llm = LLM(model_name)
-    sampling_params = SamplingParams(temperature=0.3, top_p=0.95, max_tokens=2048)
+    sampling_params = SamplingParams(temperature=1.0, top_p=1.00, top_k=20, min_p=0.0, presence_penalty=2.0, repetition_penalty=1.0, max_tokens=16384)
     outputs = llm.generate(texts, sampling_params=sampling_params)
     data = [t.outputs[0].text.strip().removeprefix("```json").removeprefix("```").removesuffix("```") for t in outputs]
     os.makedirs(".test", exist_ok=True)
