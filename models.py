@@ -92,7 +92,7 @@ class NewsSummaryBase(BaseModel):
     cross_domain_significance: List[str] = Field(
         default_factory=list,
         description=(
-            "Explicitly mentioned impact/implication on related domains. Format=key-value pairs;key=domain,snake_case;value=1-sentence implication. "
+            "Explicitly mentioned impact/implication on related domains. Format=[domain_snake_case]: [1-sentence impact]. "
             "Examples:\n"
             "ai: New model could enable more sophisticated cyber attacks\n"
             "cybersecurity: Increased risk of data breaches due to new vulnerabilities\n"
