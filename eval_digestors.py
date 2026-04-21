@@ -29,11 +29,15 @@ def main(model_name):
     create_text = lambda messages: tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, enable_thinking=False)
     texts = list(map(create_text, load_inputs()))
     llm = LLM(model_name)
-    sampling_params = SamplingParams(temperature=0.3, top_p=0.95, max_tokens=512)
+    sampling_params = SamplingParams(temperature=0.3, top_p=0.95, max_tokens=2048)
     outputs = llm.generate(texts, sampling_params=sampling_params)
-    data = [json.loads(t.outputs[0].text.strip().removeprefix("```json").removeprefix("```").removesuffix("```")) for t in outputs]
+    data = [t.outputs[0].text.strip().removeprefix("```json").removeprefix("```").removesuffix("```") for t in outputs]
+    os.makedirs(".test", exist_ok=True)
     with open(".test/outputs.json", "w") as f:
-        json.dump(data, f, indent=2)
+        f.write("[\n")
+        f.write(",\n".join(data))
+        f.write("\n]")
+        # json.dump(data, f, indent=2)
 
 MODEL_NAME = "Qwen/Qwen3.5-0.8B"
 if __name__=="__main__":
