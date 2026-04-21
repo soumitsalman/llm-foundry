@@ -71,7 +71,7 @@ class ImpactLevel(str, Enum):
 class NewsSummaryBase(BaseModel):
     """Base structure shared by all domain-specific news summaries"""
 
-    key_facts: List[str] = Field(description="3–8 one complete sentences conveying the most important who/what/when/where/how details and events.")
+    key_facts: List[str] = Field(description="3–8 complete sentences conveying the most important who/what/when/where/how details and events.")
     companies: List[str] = Field(default_factory=list, description="Names of companies/organizations explicitly mentioned. Format=snake_case.")
     event_type: Optional[str] = Field(
         None,
@@ -110,25 +110,18 @@ class NewsSummaryBase(BaseModel):
             "Examples: us_iran_conflict,us_china_tensions,red_sea_disruption,tariff_volatility,rare_earth_controls,arctic_shipping_rivalry,lithium_supply_ban,africa_mineral_conflict,cyber_arms_race_escalation."
         ),
     )
-    impact_level: Optional[str] = Field(
-        None,
-        description="Assessed severity / importance of the events to the primary domain and broader ecosystem. Allowed: null, low, medium, high, critial, transformative",
-    )
-    future_outlook: Optional[str] = Field(
-        None,
-        description="Explicitly mentioned future outlook/trajectory. 1 complete sentence.",
-    )
     tags: List[str] = Field(
         default_factory=list,
         description="Search and clustering keywords. Format=snake_case. Examples: 'agentic_ai', 'sovereign_compute', 'defense_tech'",
     )
-    headline: str = Field(
-        ..., description="Exact or slightly cleaned headline of the article"
+    impact_level: Optional[str] = Field(
+        None,
+        description="Assessed severity / importance of the events to the primary domain and broader ecosystem. Allowed: null, low, medium, high, critial, transformative",
     )
-    tldr: str = Field(
-        ...,
-        description="One crisp sentence that captures the core message / main event of the article",
-    )
+    future_outlook: Optional[str] = Field(None, description="Explicitly mentioned future outlook/trajectory. 1-complete sentence.")
+    
+    headline: str = Field(description="1-sentence capturing central thesis of the content. Include=core subject, driver, anchor, risk/opportunity, time horizon")
+    tldr: str = Field(description="1-paragraph capturing central thesis of the content. Include=context, drivers, stats, impacts, affected groups, risks, opportunities, outlooks")
 
     @classmethod
     def schema(cls):
