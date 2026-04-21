@@ -1,9 +1,60 @@
 from datetime import date
-from typing import Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union, get_args, get_origin
 from enum import Enum
+import types
 from uuid import UUID
 
 from pydantic import BaseModel, Field, HttpUrl
+
+
+def typeinfo(annotation: Any) -> str:
+    """Render a readable type name from a Pydantic FieldInfo annotation."""
+
+    if annotation is None or annotation is type(None):  # noqa: E721
+        return "null"
+    if annotation is Any:
+        return "any"
+
+    # Primitive normalization (match requested output)
+    if annotation is int:
+        return "int"
+    if annotation is float:
+        return "float"
+    if annotation is bool:
+        return "bool"
+    if annotation is str:
+        return "str"
+
+    origin = get_origin(annotation)
+
+    # `Annotated[T, ...]` -> unwrap to `T`
+    if origin is getattr(types, "AnnotatedAlias", object()) or str(origin) == "typing.Annotated":
+        args = get_args(annotation)
+        return typeinfo(args[0]) if args else "any"
+    if origin is getattr(__import__("typing"), "Annotated", object()):
+        args = get_args(annotation)
+        return typeinfo(args[0]) if args else "any"
+
+    # `T | U` (py3.10+) and `Union[T, U]`
+    if origin is Union or isinstance(annotation, types.UnionType):
+        args = list(get_args(annotation))
+        non_none = [a for a in args if a is not type(None)]  # noqa: E721
+        if len(non_none) != len(args):
+            if len(non_none) == 1:
+                return f"{typeinfo(non_none[0])}|optional"
+            return "|".join(typeinfo(a) for a in non_none) + "|optional"
+        return "|".join(typeinfo(a) for a in args)
+
+    if origin in (list, List):
+        (item_t,) = get_args(annotation) or (Any,)
+        return f"list[{typeinfo(item_t)}]"
+
+    if isinstance(annotation, type):
+        # Normalize common typing-ish names while keeping unknowns readable
+        return getattr(annotation, "__name__", str(annotation))
+
+    # Fallback for uncommon typing constructs
+    return str(annotation).replace("typing.", "")
 
 
 class ImpactLevel(str, Enum):
@@ -20,20 +71,7 @@ class ImpactLevel(str, Enum):
 class NewsSummaryBase(BaseModel):
     """Base structure shared by all domain-specific news summaries"""
 
-    article_id: Optional[UUID] = Field(
-        None,
-        description="Unique identifier for this news item summary (UUID). Usually generated during ingestion.",
-    )
-    source: str = Field(
-        ...,
-        description="Name of the publication or website (e.g. 'Bloomberg', 'The Hacker News', 'NVIDIA Blog', 'Reuters')",
-    )
-    url: HttpUrl = Field(
-        ..., description="Direct link to the original article or blog post"
-    )
-    published: date = Field(
-        ..., description="Publication date of the article (YYYY-MM-DD)"
-    )
+   
     headline: str = Field(
         ..., description="Exact or slightly cleaned headline of the article"
     )
@@ -67,7 +105,7 @@ class NewsSummaryBase(BaseModel):
             "Leave blank if no clear single event type dominates."
         ),
     )
-    cross_domain_significance: Dict[str, str] = Field(
+    cross_domain_significance: List[str] = Field(
         default_factory=dict,
         description=(
             "Short sentences explaining why this story matters to other tracked domains. "
@@ -92,11 +130,9 @@ class NewsSummaryBase(BaseModel):
             "Aim for consistency and searchability — avoid full sentences or overly long phrases."
         ),
     )
-    impact_level: Literal[
-        "unknown", "low", "medium", "high", "critical", "transformative"
-    ] = Field(
-        "unknown",
-        description="Assessed severity / importance of the news item for the primary domain and broader ecosystem",
+    impact_level: Optional[str] = Field(
+        None,
+        description="Assessed severity / importance of the news item for the primary domain and broader ecosystem. Allowed: null, low, medium, high, critial, transformative",
     )
     future_outlook: Optional[str] = Field(
         None,
@@ -106,6 +142,16 @@ class NewsSummaryBase(BaseModel):
         default_factory=list,
         description="Free-form keywords / themes that help filtering and clustering (e.g. 'agentic', 'sovereign_compute', 'defense_tech')",
     )
+
+    @classmethod
+    def schema(cls):
+        return "\n".join(
+            f"{fname}: {typeinfo(finfo.annotation)}|{finfo.description}"
+            for fname, finfo in cls.model_fields.items()
+        )
+
+    def __str__(self):
+        return self.model_dump_json()
 
 
 # ────────────────────────────────────────────────
