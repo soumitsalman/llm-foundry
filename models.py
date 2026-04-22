@@ -60,10 +60,11 @@ def typeinfo(annotation: Any) -> str:
 # Base class — updated version
 # ────────────────────────────────────────────────
 class NewsSummaryBase(BaseModel):
-    key_facts: List[str] = Field(
+    # parsed data
+    key_points: List[str] = Field(
         default_factory=list, 
         description=(
-            "Explicitly mentioned key events, facts, datapoints. "
+            "List of specified key events, facts, datapoints. "
             "Format=complete-sentences. Include=who,what,where,when,how,impact. Length=3to8 sentences. "
             "Examples:\n"
             "- Hedge funds shifted large positions in Asian markets after selling in the US and Europe\n"
@@ -71,30 +72,49 @@ class NewsSummaryBase(BaseModel):
             "- Kia unveiled new EV4 and Concept EV2 models at EV Day 2025\n"
             "- Mozilla revised Firefox terms amid user backlash\n"
         )
+    )        
+    macro_context: Optional[str] = Field(
+        None,
+        description=(
+            "Primary geopolitical, trade, economic or technological driver of events. "
+            "Examples: "
+            "us_iran_conflict, red_sea_disruption, tariff_volatility, "
+            "rare_earth_controls, arctic_shipping_rivalry, lithium_supply_ban, "
+            "africa_mineral_conflict, cyber_arms_race_escalation etc."
+        ),
     )
-    companies: List[str] = Field(default_factory=list, description="Companies/organizations explicitly mentioned. Avoid=generic,aggregates. null for empty.")
-    stock_tickers: List[str] = Field(default_factory=list, description="Stock tickers of companies/organizations explicitly mentioned. Format=UPPERCASE. null for empty.")
-    regions: List[str] = Field(default_factory=list, description="Geographic regions/locations explicitly mentioned. Avoid=generic,aggregates. null for empty.")
-    people: List[str] = Field(default_factory=list, description="Key people explicitly mentioned (ex: CEOs, political leaders). Avoid=generic,aggregates. null for empty.")
+    # "model_release, agent_launch, enterprise_adoption_case, safety_regulation_update, multimodal_breakthrough\n"
+    # "ransomware_attack, zero_day_disclosure, supply_chain_breach, ai_enhanced_exploit, state_sponsored_campaign\n"
+    # "chip_launch, platform_announcement, chip_shortage, foundry_partnership\n"
+    # "humanoid_demo, warehouse_deployment, drone_swarm_test, regulation_change\n"
+    # "series_a, acquisition_announced, merger_completed, strategic_partnership, ipo_filing\n"
+    # "earnings_beat, stock_reaction, analyst_upgrade, sector_rotation, sec_filing_update\n"
+    # "route_disruption, freight_rate_spike, aircraft_order, supply_chain_bottleneck, cyber_incident_on_cargo\n"
+    # "oil_price_shock, gdp_forecast_revision, inflation_spike, rate_cut_signal, commodity_demand_shift\n"
     event_type: Optional[str] = Field(
         None,
         description=(
-            "Primary aggregated event_type of key_facts. Avoid=full sentence. Format=snake_case. null for empty. "
-            "Examples:\n"
-            "- ai: model_release, agent_launch, enterprise_adoption_case, safety_regulation_update, multimodal_breakthrough\n"
-            "- cybersecurity: ransomware_attack, zero_day_disclosure, supply_chain_breach, ai_enhanced_exploit, state_sponsored_campaign\n"
-            "- hardware: chip_launch, platform_announcement, chip_shortage, foundry_partnership\n"
-            "- robotics: humanoid_demo, warehouse_deployment, drone_swarm_test, regulation_change\n"
-            "- startups: series_a, acquisition_announced, merger_completed, strategic_partnership, ipo_filing\n"
-            "- stock_market: earnings_beat, stock_reaction, analyst_upgrade, sector_rotation, sec_filing_update\n"
-            "- aviation: route_disruption, freight_rate_spike, aircraft_order, supply_chain_bottleneck, cyber_incident_on_cargo\n"
-            "- global_economy: oil_price_shock, gdp_forecast_revision, inflation_spike, rate_cut_signal, commodity_demand_shift\n"
+            "Primary aggregated event_type/resultant. "
+            "Examples: "
+            "model_release, agent_launch, regulation_update, multimodal_breakthrough, "
+            "ransomware_attack, zero_day_disclosure, supply_chain_breach, "
+            "chip_launch, platform_announcement, "
+            "humanoid_demo, warehouse_deployment, "
+            "series_a, acquisition_announced, ipo_filing, "
+            "earnings_beat, stock_reaction, "
+            "route_disruption, freight_rate_spike, supply_chain_bottleneck, "
+            "oil_price_shock, gdp_forecast_revision, rate_cut_signal etc."
         ),
     )
-    cross_domain_significance: List[str] = Field(
+    impact_level: Optional[str] = Field(
+        None,
+        description="Specified impact of the events on primary domain/context. "
+        "ALLOWED: null, low, medium, high, critial, transformative",
+    )
+    cross_domain_impacts: List[str] = Field(
         default_factory=list,
         description=(
-            "Explicitly mentioned impact/implication on related domains. Format=list[[domain]:[1-sentence impact]]. null for empty. "
+            "List of specified impacts on related domains. Format=list[[domain]:[1-sentence impact]]. "
             "Examples:\n"
             "- ai: New model could enable more sophisticated cyber attacks\n"
             "- cybersecurity: Increased risk of data breaches due to new vulnerabilities\n"
@@ -105,29 +125,25 @@ class NewsSummaryBase(BaseModel):
             "- stock_market: Stock market volatility in response to geopolitical events\n"
             "- startups: Emerging companies facing funding challenges\n"
         ),
-    )
-    macro_context: List[str] = Field(
-        default_factory=list,
-        description=(
-            "Primary geopolitical, trade, economic or macro driver. Format=snake_case. null for empty. "
-            "Examples: us_iran_conflict, us_china_tensions, red_sea_disruption, tariff_volatility, rare_earth_controls, arctic_shipping_rivalry, lithium_supply_ban, africa_mineral_conflict, cyber_arms_race_escalation."
-        ),
-    )
+    )    
+    future_outlook: Optional[str] = Field(default=None, description="1-sentence specifying future outlook/trajectory.")
+
+    # search keywords
+    companies: List[str] = Field(default_factory=list, description="Companies/organizations explicitly mentioned. Avoid=generic,aggregates.")
+    stock_tickers: List[str] = Field(default_factory=list, description="Stock tickers of companies/organizations explicitly mentioned. Format=UPPERCASE.")
+    regions: List[str] = Field(default_factory=list, description="Geographic regions/locations explicitly mentioned. Avoid=generic,aggregates.")
+    people: List[str] = Field(default_factory=list, description="Key people explicitly mentioned (ex: CEOs, political leaders). Avoid=generic,aggregates.")
     tags: List[str] = Field(
         default_factory=list,
         description=(
-            "Search and clustering keywords. Format=snake_case. null for empty. "
-            "Examples: agentic_ai, sovereign_compute, defense_tech",
+            "List of keywords for search/categorization/clustering. "
+            "Examples: agentic_ai, sovereign_compute, defense_tech etc.",
         )
     )
-    impact_level: Optional[str] = Field(
-        None,
-        description="Explicitly mentioned severity/impact of the events on primary domains and related ecosystem. Allowed: null, low, medium, high, critial, transformative",
-    )
-    future_outlook: Optional[str] = Field(default=None, description="Explicitly mentioned future outlook/trajectory. 1-complete sentence. null for empty.")
-    
-    thesis: str = Field(description="1-sentence capturing the central thesis of the content. Include=primary who,what,where,when,how. Length<=25words.")
-    post: str = Field(description="1-paragraph prose representing the key facts. Include=context,drivers,stats,impacts,affected groups,risks,opportunities,outlook. Length<=100words.")
+
+    # summary fields
+    thesis: str = Field(description="1-sentence capturing the central thesis. Include=primary who,what,where,when,how. Length<=25words.")
+    post: str = Field(description="1-paragraph social media post listing key facts. Include=context,drivers,stats,impacts,affected groups,risks,opportunities,outlook. Length<=100words.")
 
     @classmethod
     def schema(cls):
