@@ -59,13 +59,13 @@ def typeinfo(annotation: Any) -> str:
 # ────────────────────────────────────────────────
 # Base class — updated version
 # ────────────────────────────────────────────────
-class NewsSummaryBase(BaseModel):
+class DigestBase(BaseModel):
     # parsed data
     key_points: List[str] = Field(
         default_factory=list, 
         description=(
             "List of specified key events, facts, datapoints. "
-            "Format=complete-sentences. Include=who,what,where,when,how,impact. Length=3to8 sentences. "
+            "Format=complete-sentences. Include=who,what,where,when,how,impact. Limit=3to8. "
             "Examples:\n"
             "- Hedge funds shifted large positions in Asian markets after selling in the US and Europe\n"
             "- US markets dropped 9.3% from all-time highs\n"
@@ -153,220 +153,150 @@ class NewsSummaryBase(BaseModel):
 # ────────────────────────────────────────────────
 
 
-class AINewsSummary(NewsSummaryBase):
-    """Summary focused on AI models, agents, enterprise adoption, breakthroughs"""
-
-    models_or_agents: List[str] = Field(
-        default_factory=list,
-        description="Names or codenames of AI models, agents or frameworks mentioned (e.g. 'Grok-4', 'o3-mini', 'Perplexity PC agent')",
-    )
-    researchers: List[str] = Field(
-        default_factory=list,
-        description="Names of key researchers, authors or quoted experts",
-    )
-    benchmark_scores: Dict[str, str] = Field(
-        default_factory=dict,
-        description="Reported performance numbers on standard benchmarks (key: benchmark name, value: score)",
-    )
-    claimed_productivity_lift_pct: Optional[float] = Field(
-        None,
-        description="Percentage productivity / efficiency gain claimed for users or enterprises",
-    )
-    enterprise_adoption_rate_pct: Optional[float] = Field(
-        None,
-        description="Reported percentage of companies (especially Fortune 500) already using or piloting the technology",
-    )
-    pricing_monthly_usd: Optional[float] = Field(
-        None,
-        description="Monthly subscription price in USD if a commercial product is announced",
-    )
-    valuation_or_market_size_usd_billions: Optional[float] = Field(
-        None, description="Company valuation or projected market size in billions USD"
-    )
+class AINewsSummary(DigestBase):
+    models_or_agents: List[str] = Field(default_factory=list, description="List of names/codenames of AI models, agents or frameworks mentioned (e.g. 'Grok-4', 'o3-mini', 'Perplexity PC agent')")
+    researchers: List[str] = Field(default_factory=list, description="List of names of key researchers, authors or quoted experts")
+    benchmark_scores: List[str] = Field(default_factory=list, description="List of reported performance numbers on standard benchmarks (key: benchmark name, value: score)")
+    claimed_productivity_lift_pct: Optional[str] = Field(None, description="Reported % productivity/efficiency gain claimed for users or enterprises")
+    enterprise_adoption_rate_pct: Optional[str] = Field(None, description="Reported % companies (especially Fortune 500) already using or piloting the technology")
+    pricing_monthly_usd: Optional[str] = Field(None, description="Reported monthly subscription price in USD.")
+    valuation_or_market_size: Optional[str] = Field(None, description="Company valuation or projected market size in USD")
 
 
-class CyberNewsSummary(NewsSummaryBase):
-    """Summary focused on cybersecurity incidents, threats, vulnerabilities, defenses"""
-
-    threat_actors: List[str] = Field(
-        default_factory=list,
-        description="Named or categorized attackers (e.g. 'LockBit', 'nation-state', 'unknown')",
-    )
-    vulnerabilities: List[str] = Field(
-        default_factory=list,
-        description="CVE IDs, product names or zero-day descriptions mentioned",
-    )
-    affected_entities: List[str] = Field(
-        default_factory=list,
-        description="Organizations, sectors or number of users impacted",
-    )
-    malware_family: Optional[str] = Field(
-        None,
-        description="Name of the malware family or ransomware strain if applicable",
-    )
-    estimated_cost_usd_millions: Optional[float] = Field(
-        None,
-        description="Estimated financial damage in millions USD (ransom, recovery, fines, etc.)",
-    )
-    records_breached: Optional[str] = Field(
-        None,
-        description="Number of records or users exposed (e.g. '3.2 million', 'unknown')",
-    )
-    attack_speed_reduction_days: Optional[int] = Field(
-        None,
-        description="How many days faster attacks can now be executed due to new techniques / AI",
-    )
-    incident_type: Literal[
-        "ransomware",
-        "supply_chain",
-        "zero_day",
-        "ai_enhanced",
-        "state_sponsored",
-        "shadow_ai",
-        "critical_infra",
-    ] = Field(..., description="Primary category of the cybersecurity event")
-    business_impact_summary: str = Field(
-        ...,
-        description="One sentence summarizing operational, financial, reputational or regulatory consequences",
-    )
-    recommended_actions: List[str] = Field(
-        default_factory=list,
-        description="Specific defensive or mitigation steps recommended in the article",
-    )
-    regulatory_triggered: List[str] = Field(
-        default_factory=list,
-        description="Laws / regulations mentioned as being triggered or relevant (SEC, CIRCIA, GDPR, etc.)",
-    )
+class CyberNewsSummary(DigestBase):
+    # malware information
+    threat_actors: List[str] = Field(default_factory=list, description="List of named or categorized attackers. Examples: LockBit, nation state, etc.",)
+    vulnerabilities: List[str] = Field(default_factory=list, description="List of CVE IDs, product names or zero-day descriptions mentioned")
+    malware_family: Optional[str] = Field(None, description="Name of the malware family or ransomware strain if applicable")
+    attack_speed: Optional[str] = Field(None)
+    incident_type: Optional[str] = Field(None, description="Primary category of the cybersecurity event. Allowed: ransomware, supply_chain, zero_day, ai_enhanced, state_sponsored, shadow_ai, critical_infra etc.")
+    # impact information
+    affected_entities: List[str] = Field(default_factory=list, description="List of organizations, sectors or number of users impacted")
+    records_breached: Optional[str] = Field(None)
+    financial_impact: Optional[str] = Field(None, description="Specified financial damage in USD or cost of recovery.")    
+    business_impact: Optional[str] = Field(None, description="Specified operational, financial, reputational or regulatory consequences")
+    # remediation
+    recommended_actions: List[str] = Field(default_factory=list, description="List of specified defensive or mitigation steps" )
+    compliance_triggers: List[str] = Field(default_factory=list, description="Policies,standards,laws,regulations mentioned as being triggered or relevant (SEC, CIRCIA, GDPR, etc.)")
 
 
-class HardwareHPCNewsSummary(NewsSummaryBase):
+class HardwareNewsSummary(DigestBase):
     """Summary focused on chips, accelerators, compute infrastructure"""
 
-    product_chip: str = Field(
-        ...,
-        description="Name or model of the chip, platform or hardware product announced",
+    products: List[str] = Field(default_factory=list, description="List of specified products/chips (e.g. 'H100', 'NVIDIA GH200')")
+    manufacturer: str = Field()
+    use_cases: List[str] = Field(default_factory=list, description="List of intended/demonstrated uses. Examples: AI training, inference, HPC, edge computing. Limit=5",)
+    performance_improvement_x: Optional[str] = Field(
+        None, description="Speedup factor compared to previous generation. Include unit in value (e.g. '2.8x')."
     )
-    manufacturer: str = Field(
-        ..., description="Company that designs or manufactures the hardware"
+    power_efficiency_gain_pct: Optional[str] = Field(
+        None, description="Performance-per-watt improvement. Include unit in value (e.g. '15%')."
     )
-    use_cases: List[str] = Field(
-        default_factory=list,
-        description="Intended or demonstrated applications (AI training, inference, AV simulation, edge, etc.)",
-    )
-    performance_improvement_x: Optional[float] = Field(
-        None, description="Speedup factor compared to previous generation (e.g. 2.8×)"
-    )
-    power_efficiency_gain_pct: Optional[float] = Field(
-        None, description="Percentage improvement in performance per watt"
-    )
-    capex_investment_usd_billions: Optional[float] = Field(
+    capex_investment_usd_billions: Optional[str] = Field(
         None,
-        description="Capital expenditure announced for data centers or fabs (in billions USD)",
+        description="CapEx for data centers/fabs. Include unit in value (e.g. '$2.5 billion'). Only if >$1B announced.",
     )
-    price_per_unit_usd: Optional[float] = Field(
-        None, description="Estimated or announced price per chip/unit in USD"
+    price_per_unit_usd: Optional[str] = Field(
+        None, description="Estimated or announced price per chip/unit. Include currency in value (e.g. '$10,000')."
     )
 
 
-class RoboticsAVDronesNewsSummary(NewsSummaryBase):
+class RoboticsAVDronesNewsSummary(DigestBase):
     """Summary focused on robotics systems, autonomous vehicles, drones"""
 
     product_system: str = Field(
-        ..., description="Name or model of the robot, AV, drone or system"
+        ..., description="Name/model of robot/AV/drone (e.g. 'Tesla Cybercab', 'Boston Dynamics Stretch')"
     )
     manufacturer: str = Field(
-        ..., description="Company developing or deploying the system"
+        ..., description="Company. Format: official name. If startup: include founding year."
     )
-    category: Literal[
-        "industrial_cobot",
-        "humanoid",
-        "autonomous_vehicle",
-        "drone_swarm",
-        "warehouse_agv",
-    ] = Field(..., description="Broad category of the embodied system")
+    category: Optional[str] = Field(
+        None,
+        description="Broad category of the embodied system. Allowed: industrial_cobot, humanoid, autonomous_vehicle, drone_swarm, warehouse_agv.",
+    )
     speed_or_payload_improvement: Optional[str] = Field(
         None,
-        description="Key performance upgrade (e.g. '2.5 m/s top speed', '15 kg payload')",
+        description="Key upgrade vs prior gen. Include unit in value. Examples: '2.5 m/s', '50% faster'.",
     )
-    deployment_sites_count: Optional[int] = Field(
+    deployment_sites_count: Optional[str] = Field(
         None,
-        description="Number of real-world deployment locations or customers mentioned",
+        description="Real-world deployments/customers mentioned. Include count in value (e.g. '12 sites').",
     )
-    funding_raised_usd_millions: Optional[float] = Field(
+    funding_raised_usd_millions: Optional[str] = Field(
         None,
-        description="Funding amount raised in millions USD if funding is the main topic",
+        description="Funding amount raised. Include currency and magnitude in value (e.g. '$50 million').",
     )
-    cost_per_unit_usd: Optional[float] = Field(
-        None, description="Estimated cost per robot / vehicle in USD"
+    cost_per_unit_usd: Optional[str] = Field(
+        None, description="Estimated cost per robot / vehicle. Include currency in value (e.g. '$250,000')."
     )
     real_world_limitation_noted: List[str] = Field(
         default_factory=list,
-        description="Practical limitations or failure modes highlighted (e.g. 'slippery floors', 'edge cases')",
+        description="Practical limitations noted. Examples: weather sensitivity, edge cases, cost barriers. Exclude speculation. Limit: 5.",
     )
 
 
-class StartupCorpNewsSummary(NewsSummaryBase):
+class StartupCorpNewsSummary(DigestBase):
     """Summary focused on startups, corporate moves, funding, M&A"""
 
-    main_company: str = Field(..., description="Primary company the article is about")
+    main_company: str = Field(..., description="Primary company (official name). No qualifiers.")
     other_companies: List[str] = Field(
         default_factory=list,
-        description="Other companies involved (acquirers, partners, competitors)",
+        description="Co-parties: acquirers, investors, partners. Exclude=unrelated mentions. Limit: 5.",
     )
     lead_investors: List[str] = Field(
-        default_factory=list, description="Names of lead or prominent investors"
+        default_factory=list, description="Lead/prominent investors (official names/fund names). Exclude=passive stakeholders. Limit: 5."
     )
     acquirer: Optional[str] = Field(
         None, description="Name of the acquiring company in M&A deals"
     )
-    funding_amount_usd_millions: Optional[float] = Field(
-        None, description="Amount raised in the funding round (millions USD)"
+    funding_amount_usd_millions: Optional[str] = Field(
+        None, description="Amount raised in the funding round. Include currency in value (e.g. '$25 million')."
     )
     round_type: Optional[str] = Field(
         None, description="Stage of funding (Seed, Series A, Late, Debt, etc.)"
     )
-    pre_post_valuation_usd_billions: Optional[Dict[str, float]] = Field(
-        None, description="Pre-money and/or post-money valuation in billions USD"
+    pre_post_valuation_usd_billions: Optional[str] = Field(
+        None, description="Pre-money and/or post-money valuation. Include currency in value (e.g. 'pre: $500M, post: $1B')."
     )
-    deal_value_usd_millions: Optional[float] = Field(
-        None, description="Transaction value in M&A deals (millions USD)"
+    deal_value_usd_millions: Optional[str] = Field(
+        None, description="Transaction value in M&A deals. Include currency in value (e.g. '$500 million')."
     )
-    yoy_funding_growth_pct: Optional[float] = Field(
+    yoy_funding_growth_pct: Optional[str] = Field(
         None,
-        description="Year-over-year change in funding volume for the sector or region",
+        description="Year-over-year change in funding volume. Include unit in value (e.g. '+15%').",
     )
     strategic_rationale: str = Field(
         ...,
-        description="One sentence explaining why the deal/funding/partnership makes strategic sense",
+        description="1-sentence rationale. Format: [Actor] seeks [capability/market] via [deal type].",
     )
     use_of_funds: Optional[str] = Field(
-        None, description="Stated or inferred purpose of the capital raised"
+        None, description="Stated use of capital. Categories: R&D, expansion, acquisition, operations, debt repayment. Be explicit."
     )
 
 
-class FinancialMarketsNewsSummary(NewsSummaryBase):
+class FinancialMarketsNewsSummary(DigestBase):
     """Summary focused on stocks, earnings, filings, market movements"""
 
     ticker_or_index: str = Field(
-        ..., description="Stock ticker(s), index or sector the article focuses on"
+        ..., description="Primary ticker(s) or index (format: 'AAPL' or 'S&P500'). Limit: 3 tickers max."
     )
     companies_mentioned: List[str] = Field(
         default_factory=list,
-        description="Companies whose stock or performance is discussed",
+        description="Companies discussed. Format: official ticker+name. Exclude=tangential mentions. Limit: 5.",
     )
-    stock_reaction_pct: Optional[float] = Field(
+    stock_reaction_pct: Optional[str] = Field(
         None,
-        description="Percentage change in stock price (positive or negative) after the news",
+        description="Stock price change after news. Include unit in value (e.g. '+2.5%' or '-1.3%').",
     )
-    earnings_beat_miss_pct: Optional[float] = Field(
-        None, description="Percentage beat or miss vs consensus on key metrics"
+    earnings_beat_miss_pct: Optional[str] = Field(
+        None, description="EPS/revenue beat or miss vs consensus. Include unit and direction in value (e.g. '+3% beat' or '-2% miss')."
     )
-    revenue_or_ebitda_usd_millions: Optional[float] = Field(
+    revenue_or_ebitda_usd_millions: Optional[str] = Field(
         None,
-        description="Reported or forecasted revenue / EBITDA figure in millions USD",
+        description="Reported or forecasted revenue / EBITDA. Include currency and magnitude in value (e.g. '$1,200 million' or '$1.2B').",
     )
-    forward_guidance_change_pct: Optional[float] = Field(
-        None, description="Change in forward guidance (as percentage)"
+    forward_guidance_change_pct: Optional[str] = Field(
+        None, description="FY guidance change vs prior. Include unit in value (e.g. '+5%' if raised, '-10%' if lowered, or 'reaffirmed')."
     )
     valuation_multiple: Optional[str] = Field(
         None,
@@ -374,70 +304,46 @@ class FinancialMarketsNewsSummary(NewsSummaryBase):
     )
     financial_analysis_summary: str = Field(
         ...,
-        description="One sentence summarizing the financial implication or analyst take",
+        description="1-sentence summary. Format: [Company] [beat/miss] due to [reason], implying [outlook].",
     )
     sector_rotation_signal: str = Field(
         default="",
-        description="Indication of money moving between sectors (e.g. 'from Mag7 to cyclicals')",
+        description="Money flow signal. Format: 'from [sector] to [sector]' (e.g. 'from Mag7 to cyclicals').",
     )
 
 
-class LogisticsAviationNewsSummary(NewsSummaryBase):
+class LogisticsDigest(DigestBase):
     """Summary focused on freight, routes, aviation orders, disruptions"""
 
-    modes: List[Literal["air", "ocean", "truck", "multimodal"]] = Field(
-        default_factory=list, description="Transport modes discussed in the article"
+    transportation_mode: str = Field(description="Allowed: N/A, air, ocean, truck, multimodal")
+    affected_routes: List[str] = Field(default_factory=list, description="Examples: Red Sea, Suez, Transpacific. Limit=5")
+    freight_rate_change: Optional[str] = Field(None, description="Include=value,unit,context. Example: +8% in 2 years")
+    order_quantity: Optional[str] = Field(None, description="Include=value,unit. Example: 30 tons")
+    delay: Optional[str] = Field(
+        None, description="Average delay. Include unit in value (e.g. '5 days'). Specify carrier/route context if available."
     )
-    routes_affected: List[str] = Field(
-        default_factory=list,
-        description="Specific trade lanes or chokepoints impacted (Red Sea, Suez, Transpacific, etc.)",
-    )
-    freight_rate_change_pct: Optional[float] = Field(
-        None, description="Percentage change in freight rates (positive = increase)"
-    )
-    order_quantity_aircraft: Optional[int] = Field(
-        None, description="Number of aircraft ordered or delivered"
-    )
-    delay_days_average: Optional[int] = Field(
-        None, description="Average delay in days for deliveries or shipments"
-    )
-    cost_impact_usd_millions: Optional[float] = Field(
+    financial_impact: Optional[str] = Field(
         None,
-        description="Estimated additional cost to industry / companies in millions USD",
+        description="Cost impact. Include currency and magnitude in value (e.g. '$150 million'). Specify industry-wide or company-specific, not both.",
     )
     impact_summary: str = Field(
-        ..., description="One sentence summarizing operational or economic consequences"
+        ..., description="1-sentence impact. Format: [Route/Mode] disruption → [cost/delay] consequence."
     )
     mitigation_strategies: List[str] = Field(
         default_factory=list,
-        description="Actions companies or industry are taking to respond",
+        description="Mitigation actions. Examples: rerouting, inventory buildup, alternative suppliers. Limit: 5.",
     )
 
 
-class MacroEconomyNewsSummary(NewsSummaryBase):
+class MacroEconomyDigest(DigestBase):
     """Summary focused on global economy, macro indicators, forecasts"""
 
-    gdp_growth_forecast_pct: Optional[float] = Field(
-        None, description="Forecasted global or regional GDP growth rate (%)"
-    )
-    inflation_impact_pct: Optional[float] = Field(
-        None, description="Estimated change in inflation due to the event (%)"
-    )
-    oil_price_scenario_usd: Optional[float] = Field(
-        None,
-        description="Projected oil price in USD per barrel under the discussed scenario",
-    )
-    gold_demand_tons: Optional[float] = Field(
-        None, description="Annual central-bank or investment demand for gold in tons"
-    )
-    macro_signal: str = Field(
-        ...,
-        description="One sentence summarizing the broader economic implication (recession risk, resilience, rotation, etc.)",
-    )
-    significance_for_markets_startups: str = Field(
-        default="",
-        description="How this macro development affects capital markets or startup funding environment",
-    )
+    gdp_growth_forecast: Optional[str] = Field(None, description="GDP growth forecast. Include=value,unit,timeframe.")
+    inflation_impact: Optional[str] = Field(None, description="Inflation impact. Include=value,unit,timeframe.")
+    oil_price: Optional[str] = Field(None, description="Oil price scenario. Include=value,unit,timeframe.")
+    gold_demand: Optional[str] = Field(None, description="Gold demand. Include=value,unit,timeframe.")
+    macro_signal: str = Field(...,description="Format: [Event] signals [risk/opportunity] for [sector/macro].",)
+    market_significance: str = Field(description="Format: affects [equities/credit/funding] via [mechanism].",)
 
 
 # ────────────────────────────────────────────────
@@ -482,7 +388,7 @@ class FinancialCoreMetrics(BaseModel):
 # ────────────────────────────────────────────────
 # Derived: Earnings Report Summary
 # ────────────────────────────────────────────────
-class EarningsReportSummary(NewsSummaryBase):
+class EarningsReportSummary(DigestBase):
     """Summary for earnings press releases, call transcripts, and related materials"""
 
     fiscal_period: str = Field(
@@ -556,7 +462,7 @@ class EarningsReportSummary(NewsSummaryBase):
 # ────────────────────────────────────────────────
 # Derived: SEC Filing Summary
 # ────────────────────────────────────────────────
-class SECFilingSummary(NewsSummaryBase):
+class SECFilingSummary(DigestBase):
     """Summary for SEC filings (10-K, 10-Q, 8-K, etc.)"""
 
     filing_type: Literal["10-K", "10-K/A", "10-Q", "10-Q/A", "8-K"] = Field(
@@ -609,7 +515,7 @@ class SECFilingSummary(NewsSummaryBase):
 # ────────────────────────────────────────────────
 # Merged model: FinancialDocumentSummary
 # ────────────────────────────────────────────────
-class FinancialDocumentSummary(NewsSummaryBase):
+class FinancialDocumentSummary(DigestBase):
     """
     Unified model covering earnings releases, call transcripts, 10-K, 10-Q, 8-K and combinations.
     Use 'document_subtype' to distinguish primary focus.
@@ -715,15 +621,3 @@ class FinancialDocumentSummary(NewsSummaryBase):
         None, description="For 8-K: what triggered the filing"
     )
 
-
-# Union type for convenience
-AnyNewsSummary = Union[
-    AINewsSummary,
-    CyberNewsSummary,
-    HardwareHPCNewsSummary,
-    RoboticsAVDronesNewsSummary,
-    StartupCorpNewsSummary,
-    FinancialMarketsNewsSummary,
-    LogisticsAviationNewsSummary,
-    MacroEconomyNewsSummary,
-]
