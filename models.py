@@ -73,10 +73,10 @@ class NewsSummaryBase(BaseModel):
             "- Mozilla revised Firefox terms amid user backlash\n"
         )
     )        
-    macro_context: Optional[str] = Field(
+    macro_driver: Optional[str] = Field(
         None,
         description=(
-            "Primary geopolitical, trade, economic or technological driver of events. "
+            "Primary geopolitical, trade, economic or technological driver of events. Short phrase."
             "Examples: "
             "us_iran_conflict, red_sea_disruption, tariff_volatility, "
             "rare_earth_controls, arctic_shipping_rivalry, lithium_supply_ban, "
@@ -101,7 +101,6 @@ class NewsSummaryBase(BaseModel):
             "chip_launch, platform_announcement, "
             "humanoid_demo, warehouse_deployment, "
             "series_a, acquisition_announced, ipo_filing, "
-            "earnings_beat, stock_reaction, "
             "route_disruption, freight_rate_spike, supply_chain_bottleneck, "
             "oil_price_shock, gdp_forecast_revision, rate_cut_signal etc."
         ),
@@ -109,41 +108,35 @@ class NewsSummaryBase(BaseModel):
     impact_level: Optional[str] = Field(
         None,
         description="Specified impact of the events on primary domain/context. "
-        "ALLOWED: null, low, medium, high, critial, transformative",
+        "ALLOWED: null, low, medium, high, critical, transformative",
     )
     cross_domain_impacts: List[str] = Field(
         default_factory=list,
         description=(
-            "List of specified impacts on related domains. Format=list[[domain]:[1-sentence impact]]. "
+            "List of secondary domains and associated impacts. Format=[domain]:[1-sentence impact]. "
             "Examples:\n"
-            "- ai: New model could enable more sophisticated cyber attacks\n"
             "- cybersecurity: Increased risk of data breaches due to new vulnerabilities\n"
-            "- logistics: Disruption in key shipping routes could delay hardware deliveries\n"
             "- aviation: Flight delays and cancellations due to air traffic control issues\n"
             "- hardware: Supply chain disruptions affecting chip production\n"
-            "- global_economy: Economic slowdown impacting multiple sectors\n"
-            "- stock_market: Stock market volatility in response to geopolitical events\n"
             "- startups: Emerging companies facing funding challenges\n"
         ),
     )    
     future_outlook: Optional[str] = Field(default=None, description="1-sentence specifying future outlook/trajectory.")
+    headline: str = Field(description="1-sentence headline. Include=core_subjects,geographic_anchors,primary_stats,timescale,key_actor_driver,risk_reward. Length<=25words.")
 
     # search keywords
-    companies: List[str] = Field(default_factory=list, description="Companies/organizations explicitly mentioned. Avoid=generic,aggregates.")
-    stock_tickers: List[str] = Field(default_factory=list, description="Stock tickers of companies/organizations explicitly mentioned. Format=UPPERCASE.")
-    regions: List[str] = Field(default_factory=list, description="Geographic regions/locations explicitly mentioned. Avoid=generic,aggregates.")
-    people: List[str] = Field(default_factory=list, description="Key people explicitly mentioned (ex: CEOs, political leaders). Avoid=generic,aggregates.")
+    regions: List[str] = Field(default_factory=list, description="List of specified geographic regions/locations. Exclude=grouped/aggregated qualifications - 30 countries.")
+    people: List[str] = Field(default_factory=list, description="List of specified key people (ex: CEOs, political leaders). Exclude=generic,grouped/aggregated qualifications - 14 leaders.")
+    companies: List[str] = Field(default_factory=list, description="List of specified companies/organizations. Exclude=generic,grouped/aggregated qualifications - 5 companies.")
+    stock_tickers: List[str] = Field(default_factory=list, description="List of specified stock tickers.")
+    
     tags: List[str] = Field(
         default_factory=list,
         description=(
-            "List of keywords for search/categorization/clustering. "
+            "List of keywords usable for search,classification,clustering. "
             "Examples: agentic_ai, sovereign_compute, defense_tech etc.",
         )
     )
-
-    # summary fields
-    thesis: str = Field(description="1-sentence capturing the central thesis. Include=primary who,what,where,when,how. Length<=25words.")
-    post: str = Field(description="1-paragraph social media post listing key facts. Include=context,drivers,stats,impacts,affected groups,risks,opportunities,outlook. Length<=100words.")
 
     @classmethod
     def schema(cls):

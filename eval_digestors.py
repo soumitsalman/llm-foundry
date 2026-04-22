@@ -1,3 +1,5 @@
+from itertools import batched
+
 from models import *
 from utils import *
 from icecream import ic
@@ -26,9 +28,9 @@ INST_MSG = "EXTRACT FIELDS {fields} FROM\n```{kind}\n{text}\n```"
 
 
 STRUCTURED_OUTPUT_SYS_MSG = """
-RETURN=JSON object matching provided schema.
-EXCLUDE=empty or null fields.
-AVOID=markdown, prose, code fences, null placeholders, implied fields.
+RETURN=JSON object matching schema
+REMOVE=empty or null fields
+AVOID=markdown, prose, code fences, null placeholders, implied information, assumptions
 """
 STRUCTURED_OUTPUT_INST_MSG = """
 EXTRACT {fields} FROM content
@@ -50,7 +52,7 @@ create_msg = lambda text: [
 ]
 
 create_structured_output_msg = lambda text: [
-    {"role": "system", "content": STRUCTURED_OUTPUT_SYS_MSG},
+    {"role": "system", "content": STRUCTURED_OUTPUT_SYS_MSG.format(schema=NewsSummaryBase.model_json_schema())},
     {
         "role": "user",
         "content": STRUCTURED_OUTPUT_INST_MSG.format(
@@ -102,7 +104,7 @@ def parse_tool_call_text(text: str) -> NewsSummaryBase:
 
 
 def serialize_outputs(outputs: list[NewsSummaryBase]) -> list[str]:
-    return [item.model_dump(mode="json", exclude_none=True) for item in outputs]
+    return [item.model_dump(mode="json", exclude_none=True, exclude_unset=True, exclude_defaults=True) for item in outputs]
 
 
 def main_transformers(model_name, sampling_params, messages):
@@ -136,11 +138,14 @@ def main_vllm_structured_output(model_name, sampling_params, messages):
         **sampling_params,
         structured_outputs=StructuredOutputsParams(
             json=NewsSummaryBase.model_json_schema(),
+            disable_any_whitespace=True,
         ),
     )
     outputs = llm.chat(messages, sampling_params=params, use_tqdm=True)
-
-    return [parse_structured_output_text(output.outputs[0].text) for output in outputs]
+    save_outputs(serialize_outputs([parse_structured_output_text(output.outputs[0].text) for output in outputs])) 
+    # for chunk in batched(messages, 32):
+    #     outputs = llm.chat(chunk, sampling_params=params, use_tqdm=True)
+    #     save_outputs(serialize_outputs([parse_structured_output_text(output.outputs[0].text) for output in outputs])) 
 
 
 def main_vllm_tool_call(model_name, sampling_params, messages):
@@ -154,7 +159,7 @@ def main_vllm_tool_call(model_name, sampling_params, messages):
     
 def save_outputs(outputs):   
     os.makedirs(".test", exist_ok=True)
-    with open(".test/outputs.json", "w") as f:
+    with open(f".test/outputs-{datetime.now().strftime('%H-%M-%S')}.json", "w") as f:
         # f.write("[\n")
         # f.write(",\n".join(outputs))
         # f.write("\n]")
@@ -165,14 +170,14 @@ def save_outputs(outputs):
 # MODEL_NAME = "Qwen/Qwen3.6-35B-A3B" 
 # sampling_params = SamplingParams(temperature=1.0, top_p=1.0, top_k=40, min_p=0.0, presence_penalty=2.0, repetition_penalty=1.0, max_tokens=32768)
 model_name = "LiquidAI/LFM2.5-1.2B-Instruct" # --> great!
-sampling_params = {"temperature": 0.2, "top_k": 50, "repetition_penalty": 1.05, "max_tokens": 32768}
+sampling_params = {"temperature": 0.35, "top_k": 60, "top_p": 0.95, "repetition_penalty": 1.05, "max_tokens": 32768}
 # MODEL_NAME = "LiquidAI/LFM2-1.2B-Extract" --> gets stuck with vllm
 # MODEL_NAME = "LiquidAI/LFM2-350M-Extract" --> gets stuck with vllm, but works with transformers generate
 if __name__=="__main__":
-    messages = load_structured_output_inputs(count=64)
+    messages = load_structured_output_inputs(count=4096)
     res = main_vllm_structured_output(model_name, sampling_params, messages)
     # messages = load_inputs(count=64)
     # res = main_vllm_tool_call(model_name, sampling_params, messages)
     # res = main_transformers(model_name, sampling_params, messages)
-    save_outputs(serialize_outputs(res))
+    
 
