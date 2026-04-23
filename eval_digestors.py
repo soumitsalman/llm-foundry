@@ -9,7 +9,7 @@ def _strip_json_fences(text: str) -> str:
     return text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
 
 
-def _safe_model_dump(item: Optional[DigestBase]):
+def _safe_model_dump(item: Optional[Digest]):
     if item is None:
         return None
     return item.model_dump(mode="json", exclude_none=True, exclude_unset=True, exclude_defaults=True)
@@ -69,18 +69,18 @@ EXTRACT {fields} FROM content IF specified
 
 def create_msg(text):
     return [
-        {"role": "system", "content": build_system_message(DigestBase)},
-        {"role": "user", "content": build_user_message(DigestBase, text)},
+        {"role": "system", "content": build_system_message(Digest)},
+        {"role": "user", "content": build_user_message(Digest, text)},
     ]
 
 
 def create_structured_output_msg(text):
     return [
-        {"role": "system", "content": STRUCTURED_OUTPUT_SYS_MSG.format(schema=DigestBase.model_json_schema())},
+        {"role": "system", "content": STRUCTURED_OUTPUT_SYS_MSG.format(schema=Digest.model_json_schema())},
         {
             "role": "user",
             "content": STRUCTURED_OUTPUT_INST_MSG.format(
-                fields=",".join(DigestBase.model_fields.keys()),
+                fields=",".join(Digest.model_fields.keys()),
                 kind="blog",
                 text=text[:DEFAULT_MAX_TEXT_CHARS],
             ),
@@ -127,12 +127,12 @@ def parse_tool_call_text(text: str, model_type: Type[BaseModel]) -> BaseModel:
     return model_type.model_validate(arguments)
 
 
-def serialize_outputs(outputs: list[Optional[DigestBase]]) -> list[Any]:
+def serialize_outputs(outputs: list[Optional[Digest]]) -> list[Any]:
     return [_safe_model_dump(item) for item in outputs]
 
 
 class _BaseDigestor:
-    def __init__(self, model_name, max_tokens=32768, output_model: Type[BaseModel] = DigestBase, **sampling_params):
+    def __init__(self, model_name, max_tokens=32768, output_model: Type[BaseModel] = Digest, **sampling_params):
         self.model_name = model_name
         self.max_tokens = max_tokens
         self.output_model = output_model
@@ -182,7 +182,7 @@ class DigestorStructuredOutput(_BaseDigestor):
 
 
 class DigestorToolCall(_BaseDigestor):
-    def __init__(self, model_name, max_tokens=32768, output_model: Type[BaseModel] = DigestBase, **sampling_params):
+    def __init__(self, model_name, max_tokens=32768, output_model: Type[BaseModel] = Digest, **sampling_params):
         super().__init__(model_name, max_tokens=max_tokens, output_model=output_model, **sampling_params)
         self._chat_tools = build_chat_tools(self.output_model)
 

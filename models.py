@@ -59,7 +59,7 @@ def typeinfo(annotation: Any) -> str:
 # ────────────────────────────────────────────────
 # Base class — updated version
 # ────────────────────────────────────────────────
-class DigestBase(BaseModel):
+class Digest(BaseModel):
     # parsed data
     key_points: List[str] = Field(
         default_factory=list, 
@@ -153,7 +153,7 @@ class DigestBase(BaseModel):
 # ────────────────────────────────────────────────
 
 
-class AINewsSummary(DigestBase):
+class AINewsDigest(Digest):
     models_or_agents: List[str] = Field(default_factory=list, description="List of names/codenames of AI models, agents or frameworks mentioned (e.g. 'Grok-4', 'o3-mini', 'Perplexity PC agent')")
     researchers: List[str] = Field(default_factory=list, description="List of names of key researchers, authors or quoted experts")
     benchmark_scores: List[str] = Field(default_factory=list, description="List of reported performance numbers on standard benchmarks (key: benchmark name, value: score)")
@@ -163,7 +163,7 @@ class AINewsSummary(DigestBase):
     valuation_or_market_size: Optional[str] = Field(None, description="Company valuation or projected market size in USD")
 
 
-class CyberNewsSummary(DigestBase):
+class CyberNewsDigest(Digest):
     # malware information
     threat_actors: List[str] = Field(default_factory=list, description="List of named or categorized attackers. Examples: LockBit, nation state, etc.",)
     vulnerabilities: List[str] = Field(default_factory=list, description="List of CVE IDs, product names or zero-day descriptions mentioned")
@@ -173,14 +173,14 @@ class CyberNewsSummary(DigestBase):
     # impact information
     affected_entities: List[str] = Field(default_factory=list, description="List of organizations, sectors or number of users impacted")
     records_breached: Optional[str] = Field(None)
-    financial_impact: Optional[str] = Field(None, description="Specified financial damage in USD or cost of recovery.")    
+    financial_impact: Optional[str] = Field(None, description="Specified financial damage or cost of recovery in USD.")    
     business_impact: Optional[str] = Field(None, description="Specified operational, financial, reputational or regulatory consequences")
     # remediation
     recommended_actions: List[str] = Field(default_factory=list, description="List of specified defensive or mitigation steps" )
     compliance_triggers: List[str] = Field(default_factory=list, description="Policies,standards,laws,regulations mentioned as being triggered or relevant (SEC, CIRCIA, GDPR, etc.)")
 
 
-class HardwareNewsSummary(DigestBase):
+class HardwareNewsDigest(Digest):
     """Summary focused on chips, accelerators, compute infrastructure"""
 
     products: List[str] = Field(default_factory=list, description="List of specified products/chips (e.g. 'H100', 'NVIDIA GH200')")
@@ -201,7 +201,7 @@ class HardwareNewsSummary(DigestBase):
     )
 
 
-class RoboticsAVDronesNewsSummary(DigestBase):
+class RoboticsAVDronesNewsSummary(Digest):
     """Summary focused on robotics systems, autonomous vehicles, drones"""
 
     product_system: str = Field(
@@ -235,7 +235,7 @@ class RoboticsAVDronesNewsSummary(DigestBase):
     )
 
 
-class StartupCorpNewsSummary(DigestBase):
+class StartupCorpNewsSummary(Digest):
     """Summary focused on startups, corporate moves, funding, M&A"""
 
     main_company: str = Field(..., description="Primary company (official name). No qualifiers.")
@@ -274,7 +274,7 @@ class StartupCorpNewsSummary(DigestBase):
     )
 
 
-class FinancialMarketsNewsSummary(DigestBase):
+class FinancialMarketsNewsSummary(Digest):
     """Summary focused on stocks, earnings, filings, market movements"""
 
     ticker_or_index: str = Field(
@@ -312,30 +312,21 @@ class FinancialMarketsNewsSummary(DigestBase):
     )
 
 
-class LogisticsDigest(DigestBase):
-    """Summary focused on freight, routes, aviation orders, disruptions"""
-
+class LogisticsDigest(Digest):
     transportation_mode: str = Field(description="Allowed: N/A, air, ocean, truck, multimodal")
     affected_routes: List[str] = Field(default_factory=list, description="Examples: Red Sea, Suez, Transpacific. Limit=5")
     freight_rate_change: Optional[str] = Field(None, description="Include=value,unit,context. Example: +8% in 2 years")
     order_quantity: Optional[str] = Field(None, description="Include=value,unit. Example: 30 tons")
-    delay: Optional[str] = Field(
-        None, description="Average delay. Include unit in value (e.g. '5 days'). Specify carrier/route context if available."
-    )
-    financial_impact: Optional[str] = Field(
-        None,
-        description="Cost impact. Include currency and magnitude in value (e.g. '$150 million'). Specify industry-wide or company-specific, not both.",
-    )
-    impact_summary: str = Field(
-        ..., description="1-sentence impact. Format: [Route/Mode] disruption → [cost/delay] consequence."
-    )
-    mitigation_strategies: List[str] = Field(
+    shipping_delay: Optional[str] = Field(None, description="Include=value,unit,context. Example: 5 days for Transpacific route.")
+    financial_impact: Optional[str] = Field(None, description="Specified financial damage or cost of recovery in USD.")    
+    business_impact: Optional[str] = Field(None, description="Specified operational, reputational or regulatory consequences")
+    mitigations: List[str] = Field(
         default_factory=list,
-        description="Mitigation actions. Examples: rerouting, inventory buildup, alternative suppliers. Limit: 5.",
+        description="List of specified mitigations. Examples: rerouting, inventory buildup, alternative suppliers. Limit=5.",
     )
 
 
-class MacroEconomyDigest(DigestBase):
+class MacroEconomyDigest(Digest):
     """Summary focused on global economy, macro indicators, forecasts"""
 
     gdp_growth_forecast: Optional[str] = Field(None, description="GDP growth forecast. Include=value,unit,timeframe.")
@@ -388,7 +379,7 @@ class FinancialCoreMetrics(BaseModel):
 # ────────────────────────────────────────────────
 # Derived: Earnings Report Summary
 # ────────────────────────────────────────────────
-class EarningsReportSummary(DigestBase):
+class EarningsReportSummary(Digest):
     """Summary for earnings press releases, call transcripts, and related materials"""
 
     fiscal_period: str = Field(
@@ -462,7 +453,7 @@ class EarningsReportSummary(DigestBase):
 # ────────────────────────────────────────────────
 # Derived: SEC Filing Summary
 # ────────────────────────────────────────────────
-class SECFilingSummary(DigestBase):
+class SECFilingSummary(Digest):
     """Summary for SEC filings (10-K, 10-Q, 8-K, etc.)"""
 
     filing_type: Literal["10-K", "10-K/A", "10-Q", "10-Q/A", "8-K"] = Field(
@@ -515,7 +506,7 @@ class SECFilingSummary(DigestBase):
 # ────────────────────────────────────────────────
 # Merged model: FinancialDocumentSummary
 # ────────────────────────────────────────────────
-class FinancialDocumentSummary(DigestBase):
+class FinancialDocumentSummary(Digest):
     """
     Unified model covering earnings releases, call transcripts, 10-K, 10-Q, 8-K and combinations.
     Use 'document_subtype' to distinguish primary focus.
